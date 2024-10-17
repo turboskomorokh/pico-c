@@ -104,6 +104,11 @@ int pkg_remove_proto(const char* name)
 
   pico_log(LOG_INFO, "Removing %s:%s (%s)", pkg->name, pkg->arch, pkg->version);
 
+  r = pkg_solve_removal_depends(pkg);
+  if(r != EXIT_SUCCESS) {
+    goto exit;
+  }
+
   for (size_t lv = 0; lv < PICO_MAX_REMLEVEL; lv++) {
     for (size_t i = 0; i < pkg->files->len; i++) {
       const char* filepath = vec_get(pkg->files, i);
@@ -116,8 +121,9 @@ int pkg_remove_proto(const char* name)
       }
     }
   }
-  if (r != EXIT_SUCCESS)
+  if (r != EXIT_SUCCESS) {
     goto exit;
+  }
   db_remove_pkg(pkg);
   pico_log(LOG_INFO, "Removed %s:%s (%s)", pkg->name, pkg->arch, pkg->version);
 
