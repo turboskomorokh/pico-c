@@ -22,8 +22,8 @@ int db_write_pkg(pkg_t* pkg)
     pico_log_die(LOG_ERROR, "%s(): Unable to write: pkg_t is NULL", __func__);
   }
 
-  char* db_pkg_path = xmalloc(strlen(PICO_DB_PATH) + strlen(pkg->name) + strlen("/.dat") + 1);
-  sprintf(db_pkg_path, PICO_DB_PATH "/%s.dat", pkg->name);
+  char* db_pkg_path = xmalloc(strlen(PICO_DB_PATH) + strlen(pkg->name) + strlen("/") + 1);
+  sprintf(db_pkg_path, PICO_DB_PATH "/%s", pkg->name);
 
   db_fp = xfopen(db_pkg_path, "w");
   r     = pkg_write_FILE(db_fp, pkg);
@@ -41,8 +41,8 @@ int db_exists_pkgname(const char* name)
   pkg_t* pkg         = NULL;
   int    r           = 0;
 
-  db_pkg_path        = xmalloc(strlen(PICO_DB_PATH) + strlen(name) + strlen("/.dat") + 1);
-  sprintf(db_pkg_path, PICO_DB_PATH "/%s.dat", name);
+  db_pkg_path        = xmalloc(strlen(PICO_DB_PATH) + strlen(name) + strlen("/") + 1);
+  sprintf(db_pkg_path, PICO_DB_PATH "/%s", name);
 
   if (!fexists(db_pkg_path)) {
     xfree(db_pkg_path);
@@ -82,8 +82,8 @@ int pkg_init_db(pkg_t** pkg, const char* name)
     return r;
   }
 
-  db_pkg_path = xmalloc(strlen(PICO_DB_PATH) + strlen(name) + strlen("/.dat") + 1);
-  sprintf(db_pkg_path, PICO_DB_PATH "/%s.dat", name);
+  db_pkg_path = xmalloc(strlen(PICO_DB_PATH) + strlen(name) + strlen("/") + 1);
+  sprintf(db_pkg_path, PICO_DB_PATH "/%s", name);
 
   db_fp = xfopen(db_pkg_path, "r");
 
@@ -109,8 +109,8 @@ int db_remove_pkgname(const char* name)
     return r;
   }
 
-  db_pkg_path = xmalloc(strlen(PICO_DB_PATH) + strlen(name) + strlen("/.dat") + 1);
-  sprintf(db_pkg_path, PICO_DB_PATH "/%s.dat", name);
+  db_pkg_path = xmalloc(strlen(PICO_DB_PATH) + strlen(name) + strlen("/") + 1);
+  sprintf(db_pkg_path, PICO_DB_PATH "/%s", name);
 
   r = remove(db_pkg_path);
 
@@ -174,11 +174,12 @@ int db_check_pkgs_conflict(vec_t* conflict_list, const char* name)
     free(db_pkg_path);
   }
   closedir(db_dir);
-  return conflict_list->len ? EXIT_FAILURE : EXIT_SUCCESS;
+  return (conflict_list)->len;
 }
 
 int db_check_pkgs_dependant(vec_t* depends_list, const char* name)
 {
+  printf("HEEEELP\n");
   struct dirent* entry;
 
   pkg_t*         installed_pkg;
@@ -199,7 +200,7 @@ int db_check_pkgs_dependant(vec_t* depends_list, const char* name)
 
   while ((entry = readdir(db_dir)) != NULL) {
     const char* de_path = entry->d_name;
-    if (entry->d_type == DT_DIR) {
+    if (entry->d_type == DT_DIR || !strcmp(de_path, name)) {
       continue;
     }
 
@@ -211,6 +212,7 @@ int db_check_pkgs_dependant(vec_t* depends_list, const char* name)
 
     installed_pkg = pkg_init();
     pkg_init_FILE(db_fp, &installed_pkg);
+    pico_log(LOG_DEBUG, "Checking if %s depends on %s", installed_pkg->name, name);
 
     for (size_t i = 0; i < installed_pkg->deps->len; i++) {
       const char* dependency = vec_get(installed_pkg->deps, i);
@@ -221,8 +223,8 @@ int db_check_pkgs_dependant(vec_t* depends_list, const char* name)
     pkg_free(installed_pkg);
 
     fclose(db_fp);
-    free(db_pkg_path);
+    xfree(db_pkg_path);
   }
   closedir(db_dir);
-  return depends_list->len ? EXIT_FAILURE : EXIT_SUCCESS;
+  return (depends_list)->len;
 }

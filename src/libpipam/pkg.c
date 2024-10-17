@@ -283,21 +283,24 @@ next_check:
 int pkg_solve_removal_depends(pkg_t* pkg)
 {
   vec_t* dependant_pkgs;
-  int    r = EXIT_SUCCESS;
-
-  if (pkg->state & STATE_NO_CONFS_CHECK)
-    goto next_check;
+  int    r = EXIT_FAILURE;
 
   dependant_pkgs = vec_init();
 
-  if (db_check_pkgs_dependant(dependant_pkgs, pkg->name) != EXIT_SUCCESS) {
+  int dr = db_check_pkgs_dependant(dependant_pkgs, pkg->name);
+  
+  printf("%d\n", r);
+
+  if (r == EXIT_FAILURE) {
     pkg->state |= STATE_FAILED;
     pico_log(LOG_INFO, "These installed packages depends on %s", pkg->name);
     for (size_t i = 0; i < dependant_pkgs->len; i++) {
       const char* dependants = vec_get(dependant_pkgs, i);
       pico_log(LOG_INFO, " * %s", dependants);
     }
-    r = EXIT_FAILURE;
+  }
+  else {
+    pico_log(LOG_INFO, "No dependencies found for package: %s", pkg->name);
   }
 
   vec_free(dependant_pkgs);

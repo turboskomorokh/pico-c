@@ -1,0 +1,6 @@
+package: libastral
+arch: none
+version: 1.0
+depends: libc,
+conflicts: libsanity,
+files: :~./lib/:~./lib/libastral.so
