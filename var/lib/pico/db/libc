@@ -1,6 +1,0 @@
-package: libc
-arch: x86_64
-version: 1.0
-depends: 
-conflicts: 
-files: 
