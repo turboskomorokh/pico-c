@@ -102,6 +102,8 @@ int pkg_remove_proto(const char* name)
     goto exit;
   }
 
+  pico_log(LOG_INFO, "Trying to remove %s:%s (%s)", pkg->name, pkg->arch, pkg->version);
+
   int dr = pkg_solve_removal_depends(pkg);
   if(dr != EXIT_SUCCESS) {
     r = EXIT_FAILURE;
