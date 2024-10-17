@@ -43,7 +43,12 @@ int pkg_install_proto(const char* pkg_filepath)
   pkg = pkg_init();
 
   // TODO: USE STATE TO TRACK POSSIBLE ERRORS OCCURED DUE TO INITIALIZATION
-  pkg_init_FILE(tar_pkg_data->fp, &pkg);
+  int ir = pkg_init_FILE(tar_pkg_data->fp, &pkg);
+  if(ir != EXIT_SUCCESS) {
+    r = EXIT_FAILURE;
+    goto exit;
+  }
+  
 
   pico_log(LOG_INFO, "Installing %s:%s (%s)", pkg->name, pkg->arch, pkg->version);
 
