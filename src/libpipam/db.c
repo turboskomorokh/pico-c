@@ -179,7 +179,6 @@ int db_check_pkgs_conflict(vec_t* conflict_list, const char* name)
 
 int db_check_pkgs_dependant(vec_t* depends_list, const char* name)
 {
-  printf("HEEEELP\n");
   struct dirent* entry;
 
   pkg_t*         installed_pkg;
