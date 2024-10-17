@@ -100,6 +100,8 @@ int tar_extract_to_prefix(archive_t* a, vec_t** files, const char* prefix)
 
   while (archive_read_next_header(a, &ae) == ARCHIVE_OK) {
     const char* ae_path = archive_entry_pathname(ae);
+    if(!strcmp(ae_path, "pico.dat"))
+      continue;
 
     ex_path_size        = strlen(prefix) + strlen(ae_path) + strlen("/") + 1;
     ex_path             = xmalloc(ex_path_size);
