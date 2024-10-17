@@ -103,7 +103,6 @@ int pkg_remove_proto(const char* name)
   }
 
   int dr = pkg_solve_removal_depends(pkg);
-  printf("%d\n", dr);
   if(dr != EXIT_SUCCESS) {
     r = EXIT_FAILURE;
     goto exit;

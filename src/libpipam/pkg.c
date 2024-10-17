@@ -288,8 +288,6 @@ int pkg_solve_removal_depends(pkg_t* pkg)
   dependant_pkgs = vec_init();
 
   int dr = db_check_pkgs_dependant(dependant_pkgs, pkg->name);
-  
-  printf("%d\n", r);
 
   if (r == EXIT_FAILURE) {
     pkg->state |= STATE_FAILED;
@@ -298,9 +296,6 @@ int pkg_solve_removal_depends(pkg_t* pkg)
       const char* dependants = vec_get(dependant_pkgs, i);
       pico_log(LOG_INFO, " * %s", dependants);
     }
-  }
-  else {
-    pico_log(LOG_INFO, "No dependencies found for package: %s", pkg->name);
   }
 
   vec_free(dependant_pkgs);
