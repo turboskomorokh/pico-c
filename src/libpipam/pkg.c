@@ -241,28 +241,29 @@ int pkg_solve_conflicts(pkg_t* pkg)
   vec_t *personal_conflicts, *installed_conflicts;
   int    r = EXIT_SUCCESS;
 
-  if (pkg->state & STATE_NO_CONFS_CHECK)
-    goto next_check;
+  if (!(pkg->state & STATE_NO_CONFS_CHECK)) {
 
-  personal_conflicts  = vec_init();
-  installed_conflicts = vec_init();
+    personal_conflicts = vec_init();
 
-  for (size_t i = 0; i < pkg->confs->len; i++) {
-    const char* conflict = vec_get(pkg->confs, i);
-    if (db_exists_pkgname(conflict))
-      vec_push_back(personal_conflicts, conflict);
-  }
-
-  if (personal_conflicts->len) {
-    pkg->state |= STATE_FAILED;
-    pico_log(LOG_INFO, "Package %s conflicts with installed packages:", pkg->name);
-    for (size_t i = 0; i < personal_conflicts->len; i++) {
-      const char* personal_conflict = vec_get(personal_conflicts, i);
-      pico_log(LOG_INFO, " * %s", personal_conflict);
+    for (size_t i = 0; i < pkg->confs->len; i++) {
+      const char* conflict = vec_get(pkg->confs, i);
+      if (db_exists_pkgname(conflict))
+        vec_push_back(personal_conflicts, conflict);
     }
-    pico_log(LOG_INFO, "Consider removing these first");
-    r = EXIT_FAILURE;
+
+    if (personal_conflicts->len) {
+      pkg->state |= STATE_FAILED;
+      pico_log(LOG_INFO, "Package %s conflicts with installed packages:", pkg->name);
+      for (size_t i = 0; i < personal_conflicts->len; i++) {
+        const char* personal_conflict = vec_get(personal_conflicts, i);
+        pico_log(LOG_INFO, " * %s", personal_conflict);
+      }
+      pico_log(LOG_INFO, "Consider removing these first");
+      r = EXIT_FAILURE;
+    }
   }
+
+  installed_conflicts = vec_init();
 
   if (db_check_pkgs_conflict(installed_conflicts, pkg->name) != EXIT_SUCCESS) {
     pkg->state |= STATE_FAILED;
@@ -283,11 +284,11 @@ next_check:
 int pkg_solve_removal_depends(pkg_t* pkg)
 {
   vec_t* dependant_pkgs;
-  int    r = EXIT_FAILURE;
+  int    r       = EXIT_FAILURE;
 
   dependant_pkgs = vec_init();
 
-  int dr = db_check_pkgs_dependant(dependant_pkgs, pkg->name);
+  int dr         = db_check_pkgs_dependant(dependant_pkgs, pkg->name);
 
   if (r == EXIT_FAILURE) {
     pkg->state |= STATE_FAILED;
