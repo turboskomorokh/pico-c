@@ -32,10 +32,17 @@ int pkg_install_proto(const char* pkg_filepath)
   }
 
   a                     = tar_open_filename(pkg_filepath);
+
   memfb_t* tar_pkg_data = tar_read_file(a, "pico.dat");
 
-  pkg                   = pkg_init();
+  if (!tar_pkg_data) {
+    tar_free(a);
+    pico_log_die(LOG_ERROR, "%s: Not a package", pkg_filepath);
+  }
 
+  pkg = pkg_init();
+
+  // TODO: USE STATE TO TRACK POSSIBLE ERRORS OCCURED DUE TO INITIALIZATION
   pkg_init_FILE(tar_pkg_data->fp, &pkg);
 
   pico_log(LOG_INFO, "Installing %s:%s (%s)", pkg->name, pkg->arch, pkg->version);

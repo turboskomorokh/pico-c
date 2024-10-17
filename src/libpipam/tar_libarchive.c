@@ -77,7 +77,9 @@ memfb_t* tar_read_file(archive_t* a, const char* te_path)
     }
   }
   if (!exists) {
-    pico_log(LOG_WARN, "%s(): file %s isn't found in archive", __func__, te_path);
+    #if DEBUG == 1
+    pico_log(LOG_ERROR, "%s(): file %s isn't found in archive", __func__, te_path);
+    #endif
   }
 end:
   return mfb;
