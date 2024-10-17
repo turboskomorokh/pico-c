@@ -211,8 +211,10 @@ int db_check_pkgs_dependant(vec_t* depends_list, const char* name)
 
     installed_pkg = pkg_init();
     pkg_init_FILE(db_fp, &installed_pkg);
+    #if DEBUG == 1
     pico_log(LOG_DEBUG, "Checking if %s depends on %s", installed_pkg->name, name);
-
+    #endif
+    
     for (size_t i = 0; i < installed_pkg->deps->len; i++) {
       const char* dependency = vec_get(installed_pkg->deps, i);
       if (!strcmp(dependency, name))
