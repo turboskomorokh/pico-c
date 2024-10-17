@@ -109,8 +109,9 @@ int pkg_remove_proto(const char* name)
       const char* filepath = vec_get(pkg->files, i);
       if (!fexists(filepath))
         continue;
-      r = remove(filepath);
-      if (r != EXIT_SUCCESS && errno != 39) {
+      int rr = remove(filepath);
+      if (rr != EXIT_SUCCESS && errno != 39) {
+        r = EXIT_FAILURE;
         pico_log(LOG_WARN, "Unable to remove file %s: %s", filepath, strerror(errno));
       }
     }
