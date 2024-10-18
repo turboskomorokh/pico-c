@@ -98,5 +98,9 @@ vec_t* parse_vec(const char* line, const char* type, const char* type_delim, con
     token = strtok(NULL, val_delim);
   }
 
+#if DEBUG == 1
+  pico_log(LOG_DEBUG, "%s(): Files vector got %lu elements", __func__, pkg->files->len);
+#endif
+
   return vec;
 }

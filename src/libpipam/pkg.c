@@ -77,12 +77,6 @@ int pkg_init_FILE(FILE* fp, pkg_t** pkg)
     *pkg = pkg_init();
   }
 
-  // xfseek(fp, SEEK_SET, 0);
-
-  // for(char line[256]; fgets(line, 256, fp);) {
-  //   pico_log(LOG_DEBUG, "FILE_LINE: %s", line);
-  // }
-
   xfseek(fp, SEEK_SET, 0);
 
   return pkg_parse_FILE(fp, *pkg);
@@ -147,7 +141,6 @@ int pkg_parse_FILE(FILE* fp, pkg_t* pkg)
     case 'f': {
       if (parse_has_type(line, "files"))
         pkg->files = parse_vec(line, "files", ": ", "::");
-      pico_log(LOG_DEBUG, "Files vector got %lu elements", pkg->files->len);
     } break;
     }
   }

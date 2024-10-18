@@ -220,7 +220,9 @@ int db_check_pkgs_dependant(vec_t* depends_list, const char* name)
     for (size_t i = 0; i < installed_pkg->deps->len; i++) {
       const char* dependency = vec_get(installed_pkg->deps, i);
       if (!strcmp(dependency, name)) {
+        #if DEBUG == 1
         pico_log(LOG_DEBUG, "%s depends on %s", installed_pkg->name, name);
+        #endif
         vec_push_back(depends_list, installed_pkg->name);
       }
     }
