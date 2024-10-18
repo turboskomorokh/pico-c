@@ -8,5 +8,8 @@
 #define EXIT_ERROR 2
 
 int fexists(const char *path);
+int fisreg(const char *path);
+int fisdir(const char *path);
+int fislnk(const char *path);
 
 int is_root();

@@ -8,11 +8,14 @@
 #include "libpipam/types.h"
 #include "libpipam/xfunc.h"
 
+#include <unistd.h>
+#include <fcntl.h>
 #include <dirent.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 int pkg_install_proto(const char* pkg_filepath)
 {
@@ -44,11 +47,10 @@ int pkg_install_proto(const char* pkg_filepath)
 
   // TODO: USE STATE TO TRACK POSSIBLE ERRORS OCCURED DUE TO INITIALIZATION
   int ir = pkg_init_FILE(tar_pkg_data->fp, &pkg);
-  if(ir != EXIT_SUCCESS) {
+  if (ir != EXIT_SUCCESS) {
     r = EXIT_FAILURE;
     goto exit;
   }
-  
 
   pico_log(LOG_INFO, "Installing %s:%s (%s)", pkg->name, pkg->arch, pkg->version);
 
@@ -83,6 +85,7 @@ int pkg_remove_proto(const char* name)
 {
   pkg_t* pkg;
   int    r = EXIT_SUCCESS;
+  int    rr;
 
 #if PICO_ROOT_CHECK == 1
   if (!is_root()) {
@@ -105,7 +108,7 @@ int pkg_remove_proto(const char* name)
   pico_log(LOG_INFO, "Trying to remove %s:%s (%s)", pkg->name, pkg->arch, pkg->version);
 
   int dr = pkg_solve_removal_depends(pkg);
-  if(dr != EXIT_SUCCESS) {
+  if (dr != EXIT_SUCCESS) {
     r = EXIT_FAILURE;
     goto exit;
   }
@@ -113,15 +116,23 @@ int pkg_remove_proto(const char* name)
   for (size_t lv = 0; lv < PICO_MAX_REMLEVEL; lv++) {
     for (size_t i = 0; i < pkg->files->len; i++) {
       const char* filepath = vec_get(pkg->files, i);
-      if (!fexists(filepath))
+      if(!fexists(filepath))
         continue;
-      int rr = remove(filepath);
-      if (rr != EXIT_SUCCESS && errno != 39) {
+
+      if (fislnk(filepath)) {
+        rr = unlink(filepath);
+      }
+      else if(fisreg(filepath)) {
+        rr = remove(filepath);
+      }
+
+      if (rr != EXIT_SUCCESS && (errno != ENOENT || errno != ENOTEMPTY) ) {
         r = EXIT_FAILURE;
         pico_log(LOG_WARN, "Unable to remove file %s: %s", filepath, strerror(errno));
       }
     }
   }
+  
   if (r != EXIT_SUCCESS) {
     goto exit;
   }

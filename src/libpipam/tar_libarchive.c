@@ -63,7 +63,8 @@ memfb_t* tar_read_file(archive_t* a, const char* te_path)
 
   while (archive_read_next_header(a, &ae) == ARCHIVE_OK) {
     const char* ae_path = archive_entry_pathname(ae);
-    if (!strcmp(ae_path, te_path)) {
+    if (!strncmp(ae_path, te_path, strlen(te_path))) {
+      pico_log(LOG_DEBUG, "Found requested %s in archive\n", te_path);
       ae_size    = archive_entry_size(ae);
       mfb        = mem_fb_new(ae_size);
       bytes_read = archive_read_data(a, mfb->buf, ae_size);

@@ -77,6 +77,14 @@ int pkg_init_FILE(FILE* fp, pkg_t** pkg)
     *pkg = pkg_init();
   }
 
+  // xfseek(fp, SEEK_SET, 0);
+
+  // for(char line[256]; fgets(line, 256, fp);) {
+  //   pico_log(LOG_DEBUG, "FILE_LINE: %s", line);
+  // }
+
+  xfseek(fp, SEEK_SET, 0);
+
   return pkg_parse_FILE(fp, *pkg);
 }
 
@@ -106,7 +114,7 @@ int pkg_write_FILE(FILE* fp, pkg_t* pkg)
 
   fprintf(fp, "\nfiles: ");
   for (size_t i = 0; i < pkg->files->len; i++) {
-    fprintf(fp, ":~%s", vec_get(pkg->files, i));
+    fprintf(fp, "::%s", vec_get(pkg->files, i));
   }
 
   return EXIT_SUCCESS;
@@ -114,7 +122,7 @@ int pkg_write_FILE(FILE* fp, pkg_t* pkg)
 
 int pkg_parse_FILE(FILE* fp, pkg_t* pkg)
 {
-  for (char line[256]; fgets(line, 256, fp);) {
+  for (char line[10240]; fgets(line, 10240, fp);) {
     switch (line[0]) {
     case 'a': {
       if (parse_has_type(line, "arch"))
@@ -138,7 +146,8 @@ int pkg_parse_FILE(FILE* fp, pkg_t* pkg)
     } break;
     case 'f': {
       if (parse_has_type(line, "files"))
-        pkg->files = parse_vec(line, "files", ": ", ":~");
+        pkg->files = parse_vec(line, "files", ": ", "::");
+      pico_log(LOG_DEBUG, "Files vector got %lu elements", pkg->files->len);
     } break;
     }
   }
@@ -181,7 +190,7 @@ int pkg_check_values(pkg_t* pkg)
   pkg->state |= (!pkg->confs->len ? STATE_NO_CONFS_CHECK : 0);
 
   pkg->state |= (!pkg->files->len ? STATE_NO_FILES_CHECK : 0);
-  return pkg_check_arch(pkg);
+  return 0;// pkg_check_arch(pkg);
 }
 
 int pkg_check_arch(pkg_t* pkg)
@@ -190,7 +199,7 @@ int pkg_check_arch(pkg_t* pkg)
     return EXIT_SUCCESS;
 
   if (!cmp_arch(pkg->arch)) {
-    pico_log(LOG_WARN, "Package %s is incompatible with host architecture (arch: %s)", pkg->name, pkg->arch);
+    pico_log(LOG_ERROR, "Package %s is incompatible with host architecture (arch: %s)", pkg->name, pkg->arch);
     pkg->state |= STATE_WRONG_ARCH_CHECK;
     return EXIT_FAILURE;
   }
@@ -205,13 +214,12 @@ int pkg_solve_depends(pkg_t* pkg)
     pico_log_die(LOG_ERROR, "%s(): Unable to solve dependencies: pkg_t is NULL", __func__);
   }
 
-  vec_t* failed_depends = NULL;
+  vec_t* failed_depends = vec_init();
 
   if (pkg->state & STATE_NO_DEPS_CHECK) {
     goto next_check;
   }
 
-  failed_depends = vec_init();
 
   for (size_t i = 0; i < pkg->deps->len; i++) {
     const char* dep = vec_get(pkg->deps, i);
@@ -230,9 +238,9 @@ int pkg_solve_depends(pkg_t* pkg)
     pico_log(LOG_INFO, "Consider installing these first");
   }
 
-  vec_free(failed_depends);
 
 next_check:
+  vec_free(failed_depends);
   return pkg_solve_conflicts(pkg);
 }
 
@@ -261,6 +269,8 @@ int pkg_solve_conflicts(pkg_t* pkg)
       pico_log(LOG_INFO, "Consider removing these first");
       r = EXIT_FAILURE;
     }
+
+    vec_free(personal_conflicts);
   }
 
   installed_conflicts = vec_init();
@@ -275,8 +285,8 @@ int pkg_solve_conflicts(pkg_t* pkg)
     r = EXIT_FAILURE;
   }
 
-  vec_free(personal_conflicts);
   vec_free(installed_conflicts);
+
 next_check:
   return r;
 }
@@ -284,19 +294,20 @@ next_check:
 int pkg_solve_removal_depends(pkg_t* pkg)
 {
   vec_t* dependant_pkgs;
-  int    r       = EXIT_FAILURE;
+  int    r       = EXIT_SUCCESS;
 
   dependant_pkgs = vec_init();
 
   int dr         = db_check_pkgs_dependant(dependant_pkgs, pkg->name);
 
-  if (r == EXIT_FAILURE) {
+  if (dr == EXIT_FAILURE) {
     pkg->state |= STATE_FAILED;
     pico_log(LOG_INFO, "These installed packages depends on %s", pkg->name);
     for (size_t i = 0; i < dependant_pkgs->len; i++) {
       const char* dependants = vec_get(dependant_pkgs, i);
       pico_log(LOG_INFO, " * %s", dependants);
     }
+    r = EXIT_FAILURE;
   }
 
   vec_free(dependant_pkgs);

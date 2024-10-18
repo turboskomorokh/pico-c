@@ -63,6 +63,14 @@ FILE* xfmemopen(void* b, size_t s, const char* m)
   return fp;
 }
 
+void xfseek(FILE *fp, long off, ssize_t w) {
+  int r = fseek(fp, SEEK_SET, w);
+  if(r) {
+    perror("xfseek");
+    exit(EXIT_FAILURE);
+  }
+}
+
 char* xstrdup(const char* s)
 {
   char* p = strdup(s);

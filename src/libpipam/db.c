@@ -181,7 +181,7 @@ int db_check_pkgs_dependant(vec_t* depends_list, const char* name)
 {
   struct dirent* entry;
 
-  pkg_t*         installed_pkg;
+  pkg_t*         installed_pkg    = NULL;
   FILE*          db_fp            = NULL;
   DIR*           db_dir           = NULL;
   size_t         db_pkg_path_size = 0;
@@ -210,15 +210,17 @@ int db_check_pkgs_dependant(vec_t* depends_list, const char* name)
     db_fp         = xfopen(db_pkg_path, "r");
 
     installed_pkg = pkg_init();
+
     pkg_init_FILE(db_fp, &installed_pkg);
-    #if DEBUG == 1
+
     pico_log(LOG_DEBUG, "Checking if %s depends on %s", installed_pkg->name, name);
-    #endif
-    
+
     for (size_t i = 0; i < installed_pkg->deps->len; i++) {
       const char* dependency = vec_get(installed_pkg->deps, i);
-      if (!strcmp(dependency, name))
+      if (!strcmp(dependency, name)) {
+         pico_log(LOG_DEBUG, "%s depends on %s", installed_pkg->name, name);
         vec_push_back(depends_list, installed_pkg->name);
+      }
     }
 
     pkg_free(installed_pkg);
@@ -227,5 +229,5 @@ int db_check_pkgs_dependant(vec_t* depends_list, const char* name)
     xfree(db_pkg_path);
   }
   closedir(db_dir);
-  return (depends_list)->len;
+  return (depends_list)->len ? EXIT_FAILURE : EXIT_SUCCESS;
 }

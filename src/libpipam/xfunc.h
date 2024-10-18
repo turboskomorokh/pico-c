@@ -18,6 +18,7 @@ void* xcalloc(size_t nmemb, size_t s);
 
 // Safe file functions
 FILE* xfopen(const char* p, const char* m);
+void xfseek(FILE *fp, long off, ssize_t w);
 FILE* xfmemopen(void* b, size_t s, const char* m);
 
 // Safe string functions
