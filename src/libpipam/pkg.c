@@ -190,7 +190,7 @@ int pkg_check_values(pkg_t* pkg)
   pkg->state |= (!pkg->confs->len ? STATE_NO_CONFS_CHECK : 0);
 
   pkg->state |= (!pkg->files->len ? STATE_NO_FILES_CHECK : 0);
-  return 0;// pkg_check_arch(pkg);
+  return pkg_check_arch(pkg);
 }
 
 int pkg_check_arch(pkg_t* pkg)
@@ -214,12 +214,11 @@ int pkg_solve_depends(pkg_t* pkg)
     pico_log_die(LOG_ERROR, "%s(): Unable to solve dependencies: pkg_t is NULL", __func__);
   }
 
-  vec_t* failed_depends = vec_init();
-
   if (pkg->state & STATE_NO_DEPS_CHECK) {
     goto next_check;
   }
 
+  vec_t* failed_depends = vec_init();
 
   for (size_t i = 0; i < pkg->deps->len; i++) {
     const char* dep = vec_get(pkg->deps, i);
@@ -238,9 +237,9 @@ int pkg_solve_depends(pkg_t* pkg)
     pico_log(LOG_INFO, "Consider installing these first");
   }
 
+  vec_free(failed_depends);
 
 next_check:
-  vec_free(failed_depends);
   return pkg_solve_conflicts(pkg);
 }
 

@@ -8,10 +8,9 @@
 #include "libpipam/types.h"
 #include "libpipam/xfunc.h"
 
-#include <unistd.h>
-#include <fcntl.h>
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -116,23 +115,22 @@ int pkg_remove_proto(const char* name)
   for (size_t lv = 0; lv < PICO_MAX_REMLEVEL; lv++) {
     for (size_t i = 0; i < pkg->files->len; i++) {
       const char* filepath = vec_get(pkg->files, i);
-      if(!fexists(filepath))
+      if (!fexists(filepath))
         continue;
 
       if (fislnk(filepath)) {
         rr = unlink(filepath);
-      }
-      else if(fisreg(filepath)) {
+      } else if (fisreg(filepath)) {
         rr = remove(filepath);
       }
 
-      if (rr != EXIT_SUCCESS && (errno != ENOENT || errno != ENOTEMPTY) ) {
+      if (rr != EXIT_SUCCESS && (errno != ENOENT || errno != ENOTEMPTY)) {
         r = EXIT_FAILURE;
         pico_log(LOG_WARN, "Unable to remove file %s: %s", filepath, strerror(errno));
       }
     }
   }
-  
+
   if (r != EXIT_SUCCESS) {
     goto exit;
   }

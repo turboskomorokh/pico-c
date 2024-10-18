@@ -1,7 +1,7 @@
 #include <archive.h>
 #include <archive_entry.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "log.h"
@@ -64,7 +64,9 @@ memfb_t* tar_read_file(archive_t* a, const char* te_path)
   while (archive_read_next_header(a, &ae) == ARCHIVE_OK) {
     const char* ae_path = archive_entry_pathname(ae);
     if (!strncmp(ae_path, te_path, strlen(te_path))) {
+#if DEBUG == 1
       pico_log(LOG_DEBUG, "Found requested %s in archive\n", te_path);
+#endif
       ae_size    = archive_entry_size(ae);
       mfb        = mem_fb_new(ae_size);
       bytes_read = archive_read_data(a, mfb->buf, ae_size);
@@ -78,9 +80,9 @@ memfb_t* tar_read_file(archive_t* a, const char* te_path)
     }
   }
   if (!exists) {
-    #if DEBUG == 1
+#if DEBUG == 1
     pico_log(LOG_ERROR, "%s(): file %s isn't found in archive", __func__, te_path);
-    #endif
+#endif
   }
 end:
   return mfb;
@@ -103,11 +105,11 @@ int tar_extract_to_prefix(archive_t* a, vec_t** files, const char* prefix)
 
   while (archive_read_next_header(a, &ae) == ARCHIVE_OK) {
     const char* ae_path = archive_entry_pathname(ae);
-    if(!strcmp(ae_path, "pico.dat"))
+    if (!strcmp(ae_path, "pico.dat"))
       continue;
 
-    ex_path_size        = strlen(prefix) + strlen(ae_path) + strlen("/") + 1;
-    ex_path             = xmalloc(ex_path_size);
+    ex_path_size = strlen(prefix) + strlen(ae_path) + strlen("/") + 1;
+    ex_path      = xmalloc(ex_path_size);
     sprintf(ex_path, "%s/%s", prefix, ae_path);
 
     archive_entry_set_pathname(ae, ex_path);

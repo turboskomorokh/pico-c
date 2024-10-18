@@ -84,7 +84,7 @@ vec_t* parse_vec(const char* line, const char* type, const char* type_delim, con
     return vec;
   }
 
-  vec = vec_init();
+  vec   = vec_init();
 
   value = (char*)line + strlen(type) + strlen(type_delim);
 

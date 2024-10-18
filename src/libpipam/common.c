@@ -22,7 +22,8 @@ int fexists(const char* p)
   return 0;
 }
 
-int fisreg(const char *p) {
+int fisreg(const char* p)
+{
   struct stat st;
   if (lstat(p, &st) == EXIT_SUCCESS) {
     return S_ISREG(st.st_mode);
@@ -32,7 +33,8 @@ int fisreg(const char *p) {
 #endif
   return 0;
 }
-int fisdir(const char *p) {
+int fisdir(const char* p)
+{
   struct stat st;
   if (lstat(p, &st) == EXIT_SUCCESS) {
     return S_ISDIR(st.st_mode);
@@ -43,7 +45,8 @@ int fisdir(const char *p) {
   return 0;
 }
 
-int fislnk(const char *p){
+int fislnk(const char* p)
+{
   struct stat st;
   if (lstat(p, &st) == EXIT_SUCCESS) {
     return S_ISLNK(st.st_mode);
@@ -54,6 +57,4 @@ int fislnk(const char *p){
   return 0;
 }
 
-int is_root() {
-  return getuid() == 0;
-}
+int is_root() { return getuid() == 0; }
