@@ -55,5 +55,8 @@ int fislnk(const char *p){
 }
 
 int is_root() {
+#if PICO_ROOT_CHECK == 1
+  return 1;
+#endif
   return getuid() == 0;
 }

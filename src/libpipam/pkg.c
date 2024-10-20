@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <linux/limits.h>
+
 #include "arch.h"
 #include "db.h"
 #include "log.h"
@@ -25,9 +27,8 @@ pkg_t* pkg_init()
 void pkg_free(pkg_t* pkg)
 {
   if (pkg) {
-    if (pkg->name) {
+    if (pkg->name)
       xfree(pkg->name);
-    }
     if (pkg->arch)
       xfree(pkg->arch);
     if (pkg->version)
@@ -71,7 +72,7 @@ void pkg_print(pkg_t* pkg)
 int pkg_init_FILE(FILE* fp, pkg_t** pkg)
 {
   if (!fp) {
-    pico_log_die(LOG_ERROR, "%s(): Bad file pointer", __func__);
+    pico_log_die(LOG_ERROR, "%s(): bad file pointer", __func__);
   }
   if (!*pkg) {
     *pkg = pkg_init();
@@ -85,10 +86,10 @@ int pkg_init_FILE(FILE* fp, pkg_t** pkg)
 int pkg_write_FILE(FILE* fp, pkg_t* pkg)
 {
   if (!fp) {
-    pico_log_die(LOG_ERROR, "%s(): Bad file pointer", __func__);
+    pico_log_die(LOG_ERROR, "%s(): bad file pointer", __func__);
   }
   if (!pkg) {
-    pico_log_die(LOG_ERROR, "%s(): Unable to write: pkg_t is NULL", __func__);
+    pico_log_die(LOG_ERROR, "%s(): pkg_t is NULL", __func__);
   }
 
   fprintf(fp,
@@ -116,7 +117,7 @@ int pkg_write_FILE(FILE* fp, pkg_t* pkg)
 
 int pkg_parse_FILE(FILE* fp, pkg_t* pkg)
 {
-  for (char line[10240]; fgets(line, 10240, fp);) {
+  for (char line[PATH_MAX]; fgets(line, PATH_MAX, fp);) {
     switch (line[0]) {
     case 'a': {
       if (parse_has_type(line, "arch"))
@@ -189,15 +190,15 @@ int pkg_check_values(pkg_t* pkg)
 int pkg_check_arch(pkg_t* pkg)
 {
   if (!strcmp(pkg->arch, "none"))
-    return EXIT_SUCCESS;
+    goto end;
 
   if (!cmp_arch(pkg->arch)) {
-    pico_log(LOG_ERROR, "Package %s is incompatible with host architecture (arch: %s)", pkg->name, pkg->arch);
+    pico_log(LOG_WARN, "Package %s is incompatible with host architecture (arch: %s)", pkg->name, pkg->arch);
     pkg->state |= STATE_WRONG_ARCH_CHECK;
     return EXIT_FAILURE;
   }
 
-exit_ok:
+end:
   return EXIT_SUCCESS;
 }
 
@@ -241,29 +242,31 @@ int pkg_solve_conflicts(pkg_t* pkg)
   vec_t *personal_conflicts, *installed_conflicts;
   int    r = EXIT_SUCCESS;
 
-  if (!(pkg->state & STATE_NO_CONFS_CHECK)) {
+  if (!(pkg->state & STATE_NO_CONFS_CHECK))
+    goto check_installed_conflicts;
 
-    personal_conflicts = vec_init();
+  personal_conflicts = vec_init();
 
-    for (size_t i = 0; i < pkg->confs->len; i++) {
-      const char* conflict = vec_get(pkg->confs, i);
-      if (db_exists_pkgname(conflict))
-        vec_push_back(personal_conflicts, conflict);
-    }
-
-    if (personal_conflicts->len) {
-      pkg->state |= STATE_FAILED;
-      pico_log(LOG_INFO, "Package %s conflicts with installed packages:", pkg->name);
-      for (size_t i = 0; i < personal_conflicts->len; i++) {
-        const char* personal_conflict = vec_get(personal_conflicts, i);
-        pico_log(LOG_INFO, " * %s", personal_conflict);
-      }
-      pico_log(LOG_INFO, "Consider removing these first");
-      r = EXIT_FAILURE;
-    }
-
-    vec_free(personal_conflicts);
+  for (size_t i = 0; i < pkg->confs->len; i++) {
+    const char* conflict = vec_get(pkg->confs, i);
+    if (db_exists_pkgname(conflict))
+      vec_push_back(personal_conflicts, conflict);
   }
+
+  if (personal_conflicts->len) {
+    pkg->state |= STATE_FAILED;
+    pico_log(LOG_INFO, "Package %s conflicts with installed packages:", pkg->name);
+    for (size_t i = 0; i < personal_conflicts->len; i++) {
+      const char* personal_conflict = vec_get(personal_conflicts, i);
+      pico_log(LOG_INFO, " * %s", personal_conflict);
+    }
+    pico_log(LOG_INFO, "Consider removing these first");
+    r = EXIT_FAILURE;
+  }
+
+  vec_free(personal_conflicts);
+
+check_installed_conflicts:
 
   installed_conflicts = vec_init();
 
@@ -296,13 +299,14 @@ int pkg_solve_removal_depends(pkg_t* pkg)
     pkg->state |= STATE_FAILED;
     pico_log(LOG_INFO, "These installed packages depends on %s", pkg->name);
     for (size_t i = 0; i < dependant_pkgs->len; i++) {
-      const char* dependants = vec_get(dependant_pkgs, i);
-      pico_log(LOG_INFO, " * %s", dependants);
+      const char* dependant = vec_get(dependant_pkgs, i);
+      pico_log(LOG_INFO, " * %s", dependant);
     }
     r = EXIT_FAILURE;
   }
 
   vec_free(dependant_pkgs);
+
 next_check:
   return r;
 }

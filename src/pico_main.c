@@ -23,11 +23,9 @@ int pkg_install_proto(const char* pkg_filepath)
   memfb_t*   a_pkg_data;
   int        r = EXIT_SUCCESS;
 
-#if PICO_ROOT_CHECK == 1
   if (!is_root()) {
     pico_log_die(LOG_INFO, "This action requires root");
   }
-#endif
 
   if (!fexists(pkg_filepath)) {
     pico_log_die(LOG_ERROR, "%s: No such file or directory", pkg_filepath);
@@ -86,11 +84,9 @@ int pkg_remove_proto(const char* name)
   int    r = EXIT_SUCCESS;
   int    rr;
 
-#if PICO_ROOT_CHECK == 1
   if (!is_root()) {
     pico_log_die(LOG_INFO, "This action requires root");
   }
-#endif
 
   if (!db_exists_pkgname(name)) {
     pico_log_die(LOG_INFO, "%s is not installed", name);
@@ -120,11 +116,12 @@ int pkg_remove_proto(const char* name)
 
       if (fislnk(filepath)) {
         rr = unlink(filepath);
-      } else if (fisreg(filepath)) {
+      }
+      else {
         rr = remove(filepath);
       }
 
-      if (rr != EXIT_SUCCESS && (errno != ENOENT || errno != ENOTEMPTY)) {
+      if (rr != EXIT_SUCCESS && !(errno == ENOENT || errno == ENOTEMPTY)) {
         r = EXIT_FAILURE;
         pico_log(LOG_WARN, "Unable to remove file %s: %s", filepath, strerror(errno));
       }
@@ -135,6 +132,7 @@ int pkg_remove_proto(const char* name)
     goto exit;
   }
   db_remove_pkg(pkg);
+  
   pico_log(LOG_INFO, "Removed %s:%s (%s)", pkg->name, pkg->arch, pkg->version);
 
 exit:

@@ -8,7 +8,6 @@
 #include <stdio.h>
 
 typedef struct mem_file_buffer memfb_t;
-
 struct mem_file_buffer
 {
   void *buf;

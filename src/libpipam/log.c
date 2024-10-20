@@ -4,29 +4,28 @@
 
 #include "log.h"
 
-void pico_log(enum log_level l, const char *f, ...) {
-  const char *log_str = "";
-  va_list args;
-  FILE *out_stream;
+void pico_logger(enum log_level l, const char* f, va_list* args)
+{
+  const char* log_str = "";
+  FILE*       out_stream;
 
   switch (l) {
   case LOG_INFO: {
-    log_str = "";
     out_stream = stdout;
   } break;
 
   case LOG_WARN: {
-    log_str = "Warning: ";
+    log_str    = "[\e[0;33mWarn\e[0m]: ";
     out_stream = stdout;
   } break;
 
   case LOG_ERROR: {
-    log_str = "Error: ";
+    log_str    = "[\e[1;30mError\e[0m]: ";
     out_stream = stderr;
   } break;
 
   case LOG_DEBUG: {
-    log_str = "DEBUG: ";
+    log_str    = "\e[1;70mDEBUG\e[0m]: ";
     out_stream = stderr;
   } break;
 
@@ -35,54 +34,32 @@ void pico_log(enum log_level l, const char *f, ...) {
   } break;
   }
   fprintf(out_stream, "%s", log_str);
-  
-  va_start(args, f);
-  vfprintf(out_stream, f, args);
-  va_end(args);
-  
+  vfprintf(out_stream, f, *args);
   fputc('\n', out_stream);
-  
+}
+
+void pico_log(enum log_level l, const char* f, ...)
+{
+  va_list args;
+
+  va_start(args, f);
+
+  pico_logger(l, f, &args);
+
+  va_end(args);
+
   return;
 }
 
-void pico_log_die(enum log_level l, const char *f, ...) {
-  const char *log_str;
+void pico_log_die(enum log_level l, const char* f, ...)
+{
   va_list args;
-  FILE *out_stream;
-
-  switch (l) {
-  case LOG_INFO: {
-    log_str = "";
-    out_stream = stdout;
-  } break;
-
-  case LOG_WARN: {
-    log_str = "Warning: ";
-    out_stream = stdout;
-  } break;
-
-  case LOG_ERROR: {
-    log_str = "Error: ";
-    out_stream = stderr;
-  } break;
-
-  case LOG_DEBUG: {
-    log_str = "DEBUG: ";
-    out_stream = stderr;
-  } break;
-
-  default: {
-    log_str = "";
-    out_stream = stdout;
-  } break;
-  }
 
   va_start(args, f);
-  vfprintf(out_stream, f, args);
-  va_end(args);
-  
 
-  fputc('\n', out_stream);
+  pico_logger(l, f, &args);
+  
+  va_end(args);
 
   exit(EXIT_SUCCESS);
 
