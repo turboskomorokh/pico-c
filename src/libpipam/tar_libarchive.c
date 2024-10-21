@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "common.h"
 #include "log.h"
 #include "memfb.h"
 #include "tar.h"
@@ -111,6 +112,12 @@ int tar_extract_to_prefix(archive_t* a, vec_t** files, const char* prefix)
     ex_path_size = strlen(prefix) + strlen(ae_path) + strlen("/") + 1;
     ex_path      = xmalloc(ex_path_size);
     sprintf(ex_path, "%s/%s", prefix, ae_path);
+    
+    // Todo: Implement trigger system to allow user to choice in situations like this
+    if(fexists(ex_path)) {
+      pico_log(LOG_WARN, "%s(): file %s already exists, skipping", __func__, ex_path);
+      goto extract_next;
+    }
 
     archive_entry_set_pathname(ae, ex_path);
     if (archive_read_extract(a, ae, 0)) {

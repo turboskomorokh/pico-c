@@ -10,10 +10,22 @@
 #include <string.h>
 #endif
 
+struct stat fst;
+
 int fexists(const char* p)
 {
-  struct stat st;
-  if (lstat(p, &st) == EXIT_SUCCESS) {
+  if (stat(p, &fst) == EXIT_SUCCESS) {
+    return 1;
+  }
+#if DEBUG == 1
+  pico_log(LOG_DEBUG, "%s: %s:%s", __func__, p, strerror(errno));
+#endif
+  return 0;
+}
+
+int flexists(const char* p)
+{
+  if (lstat(p, &fst) == EXIT_SUCCESS) {
     return 1;
   }
 #if DEBUG == 1
@@ -23,9 +35,8 @@ int fexists(const char* p)
 }
 
 int fisreg(const char *p) {
-  struct stat st;
-  if (lstat(p, &st) == EXIT_SUCCESS) {
-    return S_ISREG(st.st_mode);
+  if (lstat(p, &fst) == EXIT_SUCCESS) {
+    return S_ISREG(fst.st_mode);
   }
 #if DEBUG == 1
   pico_log(LOG_DEBUG, "%s: %s:%s", __func__, p, strerror(errno));
@@ -33,9 +44,8 @@ int fisreg(const char *p) {
   return 0;
 }
 int fisdir(const char *p) {
-  struct stat st;
-  if (lstat(p, &st) == EXIT_SUCCESS) {
-    return S_ISDIR(st.st_mode);
+  if (lstat(p, &fst) == EXIT_SUCCESS) {
+    return S_ISDIR(fst.st_mode);
   }
 #if DEBUG == 1
   pico_log(LOG_DEBUG, "%s: %s:%s", __func__, p, strerror(errno));
@@ -44,9 +54,8 @@ int fisdir(const char *p) {
 }
 
 int fislnk(const char *p){
-  struct stat st;
-  if (lstat(p, &st) == EXIT_SUCCESS) {
-    return S_ISLNK(st.st_mode);
+  if (lstat(p, &fst) == EXIT_SUCCESS) {
+    return S_ISLNK(fst.st_mode);
   }
 #if DEBUG == 1
   pico_log(LOG_DEBUG, "%s: %s:%s", __func__, p, strerror(errno));

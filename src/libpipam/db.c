@@ -48,7 +48,7 @@ int db_exists_pkgname(const char* name)
   db_pkg_path = xmalloc(strlen(PICO_DB_PATH) + strlen(name) + strlen("/") + 1);
   sprintf(db_pkg_path, PICO_DB_PATH "/%s", name);
 
-  if (!fexists(db_pkg_path)) {
+  if (!flexists(db_pkg_path)) {
     goto end;
   }
 
